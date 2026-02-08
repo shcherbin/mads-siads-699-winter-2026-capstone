@@ -1,0 +1,67 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/anaconda
+{
+	"name": "MADS-SIADS-699-CAPSTONE",
+	"build": { 
+		"context": "..",
+		"dockerfile": "Dockerfile"
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"installOhMyZshConfig": true,
+			"configureZshAsDefaultShell": true,
+			"upgradePackages": true
+		},
+		"ghcr.io/devcontainers/features/aws-cli:1": {}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	 "forwardPorts": [
+		8888
+	 ],
+	"postCreateCommand": "just install-python-dependencies",
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "/venv/bin/python",
+				"python.testing.pytestEnabled": true,
+				"python.terminal.activateEnvironment": true,
+				"editor.minimap.enabled": false,
+				"terminal.integrated.env.osx": {
+    				"PYTHONPATH": "${env:PYTHONPATH}:${workspaceFolder}/src"
+  				},
+  				"terminal.integrated.env.linux": {
+    				"PYTHONPATH": "${env:PYTHONPATH}:${workspaceFolder}/src"
+  				},
+  					"terminal.integrated.env.windows": {
+    					"PYTHONPATH": "${env:PYTHONPATH};${workspaceFolder}/src"
+  				}
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-toolsai.jupyter",
+				"ms-toolsai.jupyter-keymap",
+				"ms-toolsai.datawrangler",
+				"ms-azuretools.vscode-docker",
+				"donjayamanne.python-environment-manager",
+				"mechatroner.rainbow-csv",
+				"github.copilot",
+				"skellock.just",
+				"charliermarsh.ruff"
+			]
+		}
+	},
+	"containerEnv": {
+		"PYTHONPYCACHEPREFIX": "/pycache",
+		"PYTHONDONTWRITEBYTECODE": "0",
+		"UV_LINK_MODE": "copy",
+		"UV_PROJECT_ENVIRONMENT": "/venv"
+	}
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
