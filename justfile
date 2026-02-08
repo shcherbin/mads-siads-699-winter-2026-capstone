@@ -9,5 +9,6 @@ install-python-dependencies:
 test:
 	pytest --cov=./src --cov-report=term-missing --ruff --ruff-format ./tests
 
+
 code-quality:
 	ruff check src tests notebooks
