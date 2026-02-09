@@ -23,7 +23,7 @@ wheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+*.egg.envrc
 MANIFEST
 
 # PyInstaller
@@ -136,7 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
-.envrc
+#.envrc
 .venv
 env/
 venv/
