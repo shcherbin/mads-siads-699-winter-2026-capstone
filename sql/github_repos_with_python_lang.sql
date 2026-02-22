@@ -9,4 +9,6 @@ FROM
   `bigquery-public-data.github_repos.languages` AS l
 WHERE EXISTS (
     SELECT 1 FROM UNNEST(l.language) AS lang WHERE lang.name = 'Python'
-);
+)
+LIMIT 100
+;
