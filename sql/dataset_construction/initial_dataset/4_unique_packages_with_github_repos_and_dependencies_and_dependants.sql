@@ -35,7 +35,7 @@ packages_with_dependents AS (
 )
 
 SELECT
-  -- 348,313 unique PyPI packages with GitHub repo mappings and dependencies (all historical versions)
+  -- 54,140 unique PyPI packages with GitHub repo mappings and dependencies (all historical versions)
   COUNT(DISTINCT gpv.Name) AS pypi_packages_with_github_dependencies_and_dependents
 FROM github_package_versions gpv
 JOIN packages_with_dependencies d
