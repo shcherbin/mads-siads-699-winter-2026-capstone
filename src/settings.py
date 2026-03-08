@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     env: str
     version: str
 
+    augmented_data_base_path: str = (
+        '/workspaces/mads-siads-699-winter-2026-capstone/notebooks/data/source_data/initial_dataset'
+    )
+
 
 def load_settings() -> Settings:
     return Settings()
