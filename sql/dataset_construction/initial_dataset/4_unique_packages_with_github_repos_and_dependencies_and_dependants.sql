@@ -1,8 +1,8 @@
 /*
-This query computes the total number of unique Python packages available in the PyPI system via Deps.dev dataset 
-with GitHub repository mappings and dependencies. 
+This query computes the total number of unique Python packages available in the PyPI system via Deps.dev dataset
+with GitHub repository mappings and dependencies.
 
-Query output is used in dataset construction section of the article. 
+Query output is used in dataset construction section of the article.
 */
 WITH github_package_versions AS (
   SELECT DISTINCT

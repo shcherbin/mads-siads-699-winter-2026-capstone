@@ -1,6 +1,6 @@
 /*
 This query computes the total number of unique Python packages available in the PyPI system via Deps.dev dataset.
-Query output is used in dataset construction section of the article. 
+Query output is used in dataset construction section of the article.
 */
 SELECT
    -- 771,272 for PackageVersions (all historical versions)
