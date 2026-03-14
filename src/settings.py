@@ -13,9 +13,35 @@ class Settings(BaseSettings):
     env: str
     version: str
 
-    augmented_data_base_path: str = (
-        '/workspaces/mads-siads-699-winter-2026-capstone/notebooks/data/source_data/initial_dataset'
-    )
+    data_base_path: str = '/workspaces/mads-siads-699-winter-2026-capstone/notebooks/data'
+
+    @property
+    def source_data_path(self) -> str:
+        return f"{self.data_base_path}/source_data"
+
+    @property
+    def augmented_data_path(self) -> str:
+        return f"{self.data_base_path}/augmented_data"
+
+    @property
+    def features_data_path(self) -> str:
+        return f"{self.augmented_data_path}/features"
+
+    @property
+    def initial_dataset_path(self) -> str:
+        return f'{self.source_data_path}/initial_dataset'
+
+    @property
+    def dependency_edges_path(self) -> str:
+        return f'{self.augmented_data_path}/package_dependency_edges.parquet'
+
+    @property
+    def feature_dependency_count_with_version_path(self) -> str:
+        return f'{self.features_data_path}/feature_dependency_count_with_version.parquet'
+
+    @property
+    def feature_dependency_count_without_version_path(self) -> str:
+        return f'{self.features_data_path}/feature_dependency_count_without_version.parquet'
 
 
 def load_settings() -> Settings:

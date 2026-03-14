@@ -37,3 +37,6 @@ _confirm-upload:
 	else
 	    echo "exiting without upload"
 	fi
+
+compute-feature-dependency-count:
+	python ./src/capstone/features/compute_dependency_count.py
