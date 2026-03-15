@@ -1,7 +1,6 @@
 """Extract repository metadata from the Libraries.io API.
-Reads unique packages from a parquet file, calls the Libraries.io GitHub
-repository endpoint for each one, and saves results to a parquet file.
-Respects the 1 request/second rate limit.
+Reads unique packages from notebooks/data/source_data/pypi_scorecards/*.parquet, 
+calls the Libraries.io GitHub repository endpoint for each one, and saves results to a parquet file.
 """
 
 import argparse
@@ -66,6 +65,7 @@ def load_api_key() -> str:
 
 def load_repos(input_dir: str) -> list[str]:
     """Load unique repo names from all scorecard parquet files in the directory."""
+    
     parquet_files = sorted(Path(input_dir).glob("*.parquet"))
     if not parquet_files:
         raise FileNotFoundError(f"No parquet files found in {input_dir}")
@@ -77,6 +77,7 @@ def load_repos(input_dir: str) -> list[str]:
 
 def parse_owner_repo(github_repo: str) -> tuple[str, str]:
     """Extract owner and repo name from a 'github.com/owner/repo' string."""
+    
     parts = github_repo.removeprefix("github.com/").split("/", 1)
     if len(parts) != 2 or not parts[0] or not parts[1]:
         raise ValueError(f"Invalid github_repo format: {github_repo}")
@@ -86,8 +87,8 @@ def parse_owner_repo(github_repo: str) -> tuple[str, str]:
 def fetch_repo_metadata(owner: str, repo: str, api_key: str, max_retries: int = 10) -> dict | None:
     """Call the Libraries.io API for a single GitHub repository.
 
-    Returns the JSON response dict, or None on failure.
-    Retries up to *max_retries* times on timeout errors with increasing delay.
+       Returns the JSON response dict, or None on failure.
+       Retries up to *max_retries* times on timeout errors with increasing delay.
     """
     url = f"{API_BASE_URL}/{owner}/{repo}"
     for attempt in range(1, max_retries + 1):
@@ -109,11 +110,13 @@ def fetch_repo_metadata(owner: str, repo: str, api_key: str, max_retries: int = 
 
 
 def load_already_fetched(output_path: str) -> set[str]:
-    """Load previously fetched repo full_names to support incremental runs."""
+    """Load previously fetched repo full_names to support incremental runs.
+       Returns a set of lowercased full_names for case-insensitive matching.
+    """
     if not os.path.exists(output_path):
         return set()
     df = pl.read_parquet(output_path)
-    return set(df["full_name"].to_list())
+    return set(name.lower() for name in df["full_name"].to_list())
 
 
 def extract_all(
@@ -153,7 +156,7 @@ def extract_all(
             continue
 
         full_name = f"{owner}/{name}"
-        if full_name in already_fetched:
+        if full_name.lower() in already_fetched:
             continue
 
         progress += 1
@@ -168,7 +171,7 @@ def extract_all(
         if len(results) > 0 and len(results) % 25 == 0:
             print(f"Checkpoint: saving {len(results)} new repos (total fetched this run: {fetched_count})")
             _save_batch(results, output_path, already_fetched)
-            already_fetched.update(row["full_name"] for row in results)
+            already_fetched.update(row["full_name"].lower() for row in results)
             results.clear()
 
         time.sleep(RATE_LIMIT_SECONDS)
