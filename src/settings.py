@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     def feature_dependency_count_without_version_path(self) -> str:
         return f'{self.features_data_path}/feature_dependency_count_without_version.parquet'
 
+    @property
+    def feature_total_downloads_path(self) -> str:
+        return f'{self.source_data_path}/pypi_file_downloads'
+
 
 def load_settings() -> Settings:
     return Settings()
