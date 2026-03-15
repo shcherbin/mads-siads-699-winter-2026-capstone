@@ -8,3 +8,4 @@ JOIN `harjason-siads-699.siads_699.pypi_package_repo_list` lst  --Uploaded table
 CROSS JOIN 
   UNNEST(card.checks) as checks
 WHERE card.date >= "2023-04-09" --minimum date in deps.dev export is 2023-04-10 
+--LIMIT 100 --est 66GB query
