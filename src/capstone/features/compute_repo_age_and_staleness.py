@@ -70,7 +70,7 @@ def main():
         .drop("repo_stats")
     )
 
-    enriched_unique_repos.sink_parquet(SETTINGS.feature_repo_age_and_staleness_path)
+    enriched_unique_repos.write_parquet(SETTINGS.feature_repo_age_and_staleness_path)
 
 
 if __name__ == "__main__":
