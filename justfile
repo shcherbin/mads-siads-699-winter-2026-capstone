@@ -40,3 +40,6 @@ _confirm-upload:
 
 compute-feature-dependency-count:
 	python ./src/capstone/features/compute_dependency_count.py
+
+compute-feature-compute_repo_age_and_staleness:
+	python ./src/capstone/features/compute_repo_age_and_staleness.py
