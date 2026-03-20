@@ -40,10 +40,10 @@ def get_repo_age_and_staleness(full_name: str):
 
         return {"repo_age_years": repo_age_years, "commit_staleness_days": commit_staleness_days}
     except UnknownObjectException as e:
-        print(f"Repository not found for {full_name}: {e}")
+        logger.warning(f"Repository not found for {full_name}: {e}")
         return {"repo_age_years": None, "commit_staleness_days": None}
     except GithubException as e:
-        print(f"GitHub error for {full_name}: {e}")
+        logger.error(f"GitHub error for {full_name}: {e}")
         return {"repo_age_years": None, "commit_staleness_days": None}
 
 
