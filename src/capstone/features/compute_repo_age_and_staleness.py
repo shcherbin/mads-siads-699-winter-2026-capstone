@@ -39,7 +39,8 @@ def get_repo_age_and_staleness(full_name: str):
         commit_staleness_days = round((now - pushed_at).days, 2)
 
         return {"repo_age_years": repo_age_years, "commit_staleness_days": commit_staleness_days}
-    except UnknownObjectException:
+    except UnknownObjectException as e:
+        print(f"Repository not found for {full_name}: {e}")
         return {"repo_age_years": None, "commit_staleness_days": None}
     except GithubException as e:
         print(f"GitHub error for {full_name}: {e}")
@@ -47,7 +48,7 @@ def get_repo_age_and_staleness(full_name: str):
 
 
 def main():
-    unique_repos= load_initial_dataset()
+    unique_repos = load_initial_dataset()
     enriched_unique_repos = (
         unique_repos
             #.head()
