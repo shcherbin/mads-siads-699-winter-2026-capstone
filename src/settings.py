@@ -1,5 +1,12 @@
+from pathlib import Path
+
 import dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _repo_root() -> Path:
+    """Resolves the repository root from this file's location, regardless of cwd."""
+    return Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -13,7 +20,7 @@ class Settings(BaseSettings):
     env: str
     version: str
 
-    data_base_path: str = '/workspaces/mads-siads-699-winter-2026-capstone/notebooks/data'
+    data_base_path: str = str(_repo_root() / 'notebooks' / 'data')
 
     @property
     def source_data_path(self) -> str:
@@ -30,6 +37,22 @@ class Settings(BaseSettings):
     @property
     def initial_dataset_path(self) -> str:
         return f'{self.source_data_path}/initial_dataset'
+
+    @property
+    def librariesio_path(self) -> str:
+        return f'{self.source_data_path}/librariesio'
+
+    @property
+    def mttu_mttr_path(self) -> str:
+        return f'{self.source_data_path}/mttu_mttr'
+
+    @property
+    def pypi_scorecards_path(self) -> str:
+        return f'{self.source_data_path}/pypi_scorecards'
+
+    @property
+    def unique_packages_path(self) -> str:
+        return f'{self.augmented_data_path}/unique_packages.parquet'
 
     @property
     def dependency_edges_path(self) -> str:
