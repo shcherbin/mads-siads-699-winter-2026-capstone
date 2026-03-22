@@ -63,3 +63,7 @@ exclude = [
 line-length = 120
 indent-width = 4
 target-version = "py313"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

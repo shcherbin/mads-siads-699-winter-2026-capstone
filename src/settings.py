@@ -47,6 +47,10 @@ class Settings(BaseSettings):
         return f'{self.source_data_path}/librariesio'
 
     @property
+    def librariesio_parquet_path(self) -> str:
+        return f'{self.librariesio_path}/librariesio.parquet'
+
+    @property
     def mttu_mttr_path(self) -> str:
         return f'{self.source_data_path}/mttu_mttr'
 
