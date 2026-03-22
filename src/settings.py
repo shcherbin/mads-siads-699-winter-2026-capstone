@@ -35,6 +35,10 @@ class Settings(BaseSettings):
         return f"{self.augmented_data_path}/features"
 
     @property
+    def visualizations_path(self) -> str:
+        return f"{self.augmented_data_path}/visualizations"
+
+    @property
     def initial_dataset_path(self) -> str:
         return f'{self.source_data_path}/initial_dataset'
 
