@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     def feature_total_downloads_path(self) -> str:
         return f'{self.source_data_path}/pypi_file_downloads'
 
+    @property
+    def feature_repo_age_and_staleness_path(self) -> str:
+        return f'{self.features_data_path}/feature_repo_age_and_staleness.parquet'
+
 
 def load_settings() -> Settings:
     return Settings()
