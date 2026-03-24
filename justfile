@@ -20,7 +20,7 @@ download-source-data:
 
 
 upload-source-data-dryrun:
-	aws s3 sync --dryrun notebooks/data s3://$AWS_S3_BUCKET/
+	aws s3 sync --dryrun notebooks/data s3://$AWS_S3_BUCKET/  --exclude ".*" --exclude "*/.*"
 
 
 upload-source-data:
