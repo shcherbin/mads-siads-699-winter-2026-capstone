@@ -24,7 +24,16 @@ class FinalDatasetConstructor:
 
     @cached_property
     def df_feature_repo_age_and_commit_staleness(self) -> pl.DataFrame:
-        return pl.read_parquet(f"{SETTINGS.feature_repo_age_and_staleness_path}")
+        data =  pl.read_parquet(f"{SETTINGS.feature_repo_age_and_staleness_path}")
+        return (
+            data
+                .select(
+                    pl.col("package_name"),
+                    pl.col("github_repo"),
+                    pl.col("repo_age_years").alias("github_repo_age_in_years"),
+                    pl.col("commit_staleness_days").alias("github_repo_commit_staleness_in_days"),
+                )
+        )
 
     @cached_property
     def df_feature_dependency_count(self) -> pl.DataFrame:
@@ -46,6 +55,19 @@ class FinalDatasetConstructor:
                 .collect()
         )
 
+    @cached_property
+    def df_libraries_io(self) -> pl.DataFrame:
+        librariesio = pl.scan_parquet(f"{SETTINGS.librariesio_path}/*.parquet")
+        return (
+            librariesio
+                .select(
+                    pl.col("full_name").alias("github_repo"),
+                    pl.col("contributions_count").alias("github_repo_contributions_count"),
+                    pl.col("size").alias("github_repo_size_in_kb"),
+                )
+                .collect()
+        )
+
     def __call__(self) -> pl.DataFrame:
         """Merge the initial dataset with the feature datasets to create the final dataset.
         """
@@ -54,6 +76,7 @@ class FinalDatasetConstructor:
             .join(self.df_feature_repo_age_and_commit_staleness, on=["package_name", "github_repo"], how="left")
             .join(self.df_feature_dependency_count, on="package_name", how="left")
             .join(self.df_feature_total_downloads, on="package_name", how="left")
+            .join(self.df_libraries_io, on="github_repo", how="left")
         )
         return merged_df
 
