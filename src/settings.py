@@ -79,6 +79,18 @@ class Settings(BaseSettings):
         return f'{self.source_data_path}/pypi_file_downloads'
 
     @property
+    def feature_libraries_io_path(self) -> str:
+        return f'{self.features_data_path}/feature_libraries_io.parquet'
+
+    @property
+    def feature_pypi_downloads_path(self) -> str:
+        return f'{self.features_data_path}/feature_pypi_downloads.parquet'
+
+    @property
+    def feature_ossf_scorecard_path(self) -> str:
+        return f'{self.features_data_path}/feature_ossf_scorecard.parquet'
+
+    @property
     def feature_repo_age_and_staleness_path(self) -> str:
         return f'{self.features_data_path}/feature_repo_age_and_staleness.parquet'
 
