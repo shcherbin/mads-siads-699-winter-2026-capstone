@@ -43,3 +43,12 @@ compute-feature-dependency-count:
 
 compute-feature-compute_repo_age_and_staleness:
 	python ./src/capstone/features/compute_repo_age_and_staleness.py
+
+publish-feature-libraries-io:
+	python ./src/capstone/features/publish_libaries_io_features.py
+
+publish-feature-ossf-scorecard:
+	python ./src/capstone/features/publish_ossf_scorecard.py
+
+publish-feature-pypi-downloads:
+	python ./src/capstone/features/publish_pypi_downloads.py
