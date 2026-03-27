@@ -67,3 +67,21 @@ Dev Containers: Reopen in Container
 This builds and runs the project’s development container, installing all dependencies inside an isolated environment.
 
 </details>
+
+### Common issues
+If you are on windows and your notebooks do not run, 
+adjust the WSL memory size 
+```
+notepad.exe %UserProfile%/.wslconfig
+```
+and add the following:
+```
+[wsl2]
+memory=60GB #as allows on your machine.
+processors=16
+swap=0
+```
+then run:
+```
+wsl --shutdown
+```
