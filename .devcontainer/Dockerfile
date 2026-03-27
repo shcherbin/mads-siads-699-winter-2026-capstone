@@ -18,7 +18,7 @@ RUN curl -sSL "https://just.systems/install.sh" | bash -s -- --to /usr/local/bin
 
 # Install direnv (Debian package is fine; alternatively build from source)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends direnv && \
+    apt-get install -y --no-install-recommends direnv graphviz libgraphviz-dev pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
 # Make sure direnv is hooked into shells
