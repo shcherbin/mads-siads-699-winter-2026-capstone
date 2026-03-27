@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     @property
     def mttu_mttr_path(self) -> str:
-        return f'{self.source_data_path}/mttu_mttr'
+        return f'{self.augmented_data_path_data_path}/mttu_mttr_data'
 
     @property
     def pypi_scorecards_path(self) -> str:
