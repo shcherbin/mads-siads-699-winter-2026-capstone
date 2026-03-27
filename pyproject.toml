@@ -28,6 +28,7 @@ dependencies = [
     "pyvis>=0.3.2",
     "scikit-image>=0.25.2",
     "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
     "statsmodels>=0.14.5",
     "umap-learn>=0.5.9.post2",
     "vegafusion>=2.0.2",
