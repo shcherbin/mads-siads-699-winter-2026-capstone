@@ -1,6 +1,5 @@
 import glob
 import logging
-import os
 import json
 import pandas as pd
 import polars as pl
