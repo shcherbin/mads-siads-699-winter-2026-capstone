@@ -74,6 +74,23 @@ def load_repos(input_dir: str) -> list[str]:
     return all_repos
 
 
+def load_repos_from_unique_packages(unique_packages_path: str) -> list[str]:
+    """Load unique repo names from the unique packages parquet file."""
+    path = Path(unique_packages_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Unique packages parquet file not found: {unique_packages_path}")
+
+    repos = (
+        pl.read_parquet(path, columns=["github_repo"])
+        .get_column("github_repo")
+        .drop_nulls()
+        .unique()
+        .to_list()
+    )
+    logger.info(f"Loaded {len(repos)} unique repos from {unique_packages_path}")
+    return repos
+
+
 def parse_owner_repo(github_repo: str) -> tuple[str, str]:
     """Extract owner and repo name from a 'github.com/owner/repo' string."""
 
@@ -86,8 +103,8 @@ def parse_owner_repo(github_repo: str) -> tuple[str, str]:
 def fetch_repo_metadata(owner: str, repo: str, api_key: str, max_retries: int = 10) -> dict | None:
     """Call the Libraries.io API for a single GitHub repository.
 
-       Returns the JSON response dict, or None on failure.
-       Retries up to *max_retries* times on timeout errors with increasing delay.
+    Returns the JSON response dict, or None on failure.
+    Retries up to *max_retries* times on transient request errors with increasing delay.
     """
     url = f"{API_BASE_URL}/{owner}/{repo}"
     for attempt in range(1, max_retries + 1):
@@ -97,14 +114,29 @@ def fetch_repo_metadata(owner: str, repo: str, api_key: str, max_retries: int = 
                 return resp.json()
             logger.warning(f"HTTP {resp.status_code} for {owner}/{repo}: {resp.text[:200]}")
             return None
-        except requests.exceptions.Timeout:
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+        ) as err:
             delay = 5 * attempt
             if attempt < max_retries:
-                logger.warning(f"Timeout for {owner}/{repo} (attempt {attempt}/{max_retries}), retrying in {delay}s")
+                logger.warning(
+                    f"Transient request error for {owner}/{repo} ({err.__class__.__name__}) "
+                    f"(attempt {attempt}/{max_retries}), retrying in {delay}s"
+                )
                 time.sleep(delay)
             else:
-                logger.warning(f"Timeout for {owner}/{repo} (attempt {attempt}/{max_retries})")
-    logger.error(f"Failed to fetch {owner}/{repo} after {max_retries} timeout retries")
+                logger.warning(
+                    f"Transient request error for {owner}/{repo} ({err.__class__.__name__}) "
+                    f"(attempt {attempt}/{max_retries})"
+                )
+        except requests.exceptions.RequestException as err:
+            logger.warning(
+                f"Non-retriable request error for {owner}/{repo} ({err.__class__.__name__}): {err}"
+            )
+            return None
+    logger.error(f"Failed to fetch {owner}/{repo} after {max_retries} transient retries")
     return None
 
 
@@ -121,15 +153,21 @@ def load_already_fetched(output_path: str) -> set[str]:
 def extract_all(
     input_dir: str = SETTINGS.pypi_scorecards_path,
     output_path: str = SETTINGS.librariesio_parquet_path,
+    unique_packages_path: str = SETTINGS.unique_packages_path,
+    use_unique_packages: bool = False,
     limit: int | None = None,
 ) -> pl.DataFrame:
     """Fetch Libraries.io metadata for all repos and save to parquet.
 
     Args:
+        use_unique_packages: If True, read repos from `unique_packages_path`.
         limit: If set, only fetch this many repos (useful for testing).
     """
     api_key = load_api_key()
-    repos = load_repos(input_dir)
+    if use_unique_packages:
+        repos = load_repos_from_unique_packages(unique_packages_path)
+    else:
+        repos = load_repos(input_dir)
 
     # Resume support: skip repos already fetched
     already_fetched = load_already_fetched(output_path)
@@ -209,5 +247,20 @@ def _save_batch(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract repo metadata from Libraries.io")
     parser.add_argument("--limit", type=int, default=None, help="Max repos to fetch (e.g. --limit 5 for testing)")
+    parser.add_argument(
+        "--use-unique-packages",
+        action="store_true",
+        help="Read repo list from settings.unique_packages_path instead of pypi_scorecards parquet files",
+    )
+    parser.add_argument(
+        "--unique-packages-path",
+        type=str,
+        default=SETTINGS.unique_packages_path,
+        help="Path to unique packages parquet file (must contain github_repo column)",
+    )
     args = parser.parse_args()
-    extract_all(limit=args.limit)
+    extract_all(
+        limit=args.limit,
+        use_unique_packages=args.use_unique_packages,
+        unique_packages_path=args.unique_packages_path,
+    )

@@ -73,6 +73,3 @@ target-version = "py313"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-
-[tool.uv.sources]
-dependency-metrics = { git = "https://github.com/imranur-rahman/dependency-update-metrics" }

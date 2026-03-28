@@ -59,6 +59,10 @@ class Settings(BaseSettings):
         return f'{self.source_data_path}/pypi_scorecards'
 
     @property
+    def scorecards_cli_results_path(self) -> str:
+        return f'{self.source_data_path}/scorecards_cli/scorecard_results.jsonl'
+
+    @property
     def unique_packages_path(self) -> str:
         return f'{self.augmented_data_path}/unique_packages.parquet'
 
