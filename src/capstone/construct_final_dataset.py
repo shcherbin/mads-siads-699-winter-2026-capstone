@@ -94,6 +94,34 @@ class FinalDatasetConstructor:
                 .collect()
         )
 
+    @cached_property
+    def df_ossf_scorecard(self) -> pl.DataFrame:
+        data = pl.scan_parquet(SETTINGS.feature_ossf_scorecard_path)
+        return (
+            data
+                .select(
+                    pl.col("repo_name").alias("github_repo"),
+                    pl.col("Binary-Artifacts").alias("binary_artifacts"),
+                    pl.col("Branch-Protection").alias("branch_protection"),
+                    pl.col("Code-Review").alias("code_review"),
+                    pl.col("Dangerous-Workflow").alias("dangerous_workflow"),
+                    pl.col("License").alias("license"),
+                    pl.col("Maintained").alias("maintained"),
+                    pl.col("Pinned-Dependencies").alias("pinned_dependencies"),
+                    pl.col("SAST").alias("sast"),
+                    pl.col("Security-Policy").alias("security_policy"),
+                    #pl.col("Fuzzing").alias("fuzzing"),
+                    pl.col("Token-Permissions").alias("token_permissions"),
+                    #pl.col("Dependency-Update-Tool").alias("depedency_update_tool"),
+                    #pl.col("Signed-Releases").alias("signed_releases"),
+
+                    #pl.col("CII-Best-Practices").alias("cii_best_practices"),
+                    pl.col("Vulnerabilities").alias("vulnerabilities_count"),
+                    pl.col("aggregate_score").alias("aggregated_score"),
+                )
+                .collect()
+        )
+
     def __call__(self) -> pl.DataFrame:
         """Merge the initial dataset with the feature datasets to create the final dataset.
         """
@@ -104,6 +132,7 @@ class FinalDatasetConstructor:
             .join(self.df_feature_total_downloads, on="package_name", how="left")
             #.join(self.df_libraries_io, on="github_repo", how="left")
             .join(self.df_feature_repo_contributions_and_size, on="github_repo", how="left")
+            .join(self.df_ossf_scorecard, on="github_repo", how="left")
         )
         return merged_df
 
