@@ -89,10 +89,16 @@ class Settings(BaseSettings):
     @property
     def feature_ossf_scorecard_path(self) -> str:
         return f'{self.features_data_path}/feature_ossf_scorecard.parquet'
+    def feature_repo_contributions_and_size_path(self) -> str:
+        return f'{self.features_data_path}/feature_repo_contributions_and_size'
 
     @property
     def feature_repo_age_and_staleness_path(self) -> str:
         return f'{self.features_data_path}/feature_repo_age_and_staleness.parquet'
+
+    @property
+    def final_dataset_path(self) -> str:
+        return f'{self.augmented_data_path}/final_dataset.parquet'
 
 
 def load_settings() -> Settings:

@@ -41,7 +41,7 @@ _confirm-upload:
 compute-feature-dependency-count:
 	python ./src/capstone/features/compute_dependency_count.py
 
-compute-feature-compute_repo_age_and_staleness:
+compute-feature-repo-age-and-staleness:
 	python ./src/capstone/features/compute_repo_age_and_staleness.py
 
 publish-feature-libraries-io:
@@ -52,3 +52,6 @@ publish-feature-ossf-scorecard:
 
 publish-feature-pypi-downloads:
 	python ./src/capstone/features/publish_pypi_downloads.py
+
+compute-feature-repo-contributors-and-size:
+	python ./src/capstone/features/compute_repo_contributions_and_size.py
