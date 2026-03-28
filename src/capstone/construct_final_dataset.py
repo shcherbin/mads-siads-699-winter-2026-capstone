@@ -115,8 +115,9 @@ def main():
     final_df  = (
         construct()
             .drop_nulls()
-            .write_parquet(SETTINGS.final_dataset_path)
     )
+
+    final_df.write_parquet(SETTINGS.final_dataset_path)
 
 
 
