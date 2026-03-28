@@ -59,6 +59,10 @@ class Settings(BaseSettings):
         return f'{self.source_data_path}/pypi_scorecards'
 
     @property
+    def scorecards_cli_results_path(self) -> str:
+        return f'{self.source_data_path}/scorecards_cli/scorecard_results.jsonl'
+
+    @property
     def unique_packages_path(self) -> str:
         return f'{self.augmented_data_path}/unique_packages.parquet'
 
@@ -89,8 +93,6 @@ class Settings(BaseSettings):
     @property
     def feature_ossf_scorecard_path(self) -> str:
         return f'{self.features_data_path}/feature_ossf_scorecard.parquet'
-    def feature_repo_contributions_and_size_path(self) -> str:
-        return f'{self.features_data_path}/feature_repo_contributions_and_size'
 
     @property
     def feature_repo_age_and_staleness_path(self) -> str:

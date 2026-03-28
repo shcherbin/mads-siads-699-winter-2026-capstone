@@ -21,6 +21,7 @@ from capstone.extraction.extract_librariesio_api import (
     fetch_repo_metadata,
     load_already_fetched,
     load_repos,
+    load_repos_from_unique_packages,
     parse_owner_repo,
 )
 from settings import load_settings
@@ -93,6 +94,25 @@ class TestLoadRepos:
         """After refactoring, load_repos must not write to stdout (uses logger)."""
         pl.DataFrame({"repo_name": ["github.com/a/b"]}).write_parquet(tmp_path / "f1.parquet")
         load_repos(str(tmp_path))
+        assert capsys.readouterr().out == ""
+
+
+class TestLoadReposFromUniquePackages:
+    def test_returns_unique_repos(self, tmp_path):
+        path = tmp_path / "unique_packages.parquet"
+        pl.DataFrame({"github_repo": ["github.com/a/b", "github.com/c/d", "github.com/a/b"]}).write_parquet(path)
+        repos = load_repos_from_unique_packages(str(path))
+        assert set(repos) == {"github.com/a/b", "github.com/c/d"}
+
+    def test_raises_if_file_missing(self, tmp_path):
+        with pytest.raises(FileNotFoundError):
+            load_repos_from_unique_packages(str(tmp_path / "missing.parquet"))
+
+    def test_no_stdout_output(self, tmp_path, capsys):
+        """After refactoring, load_repos_from_unique_packages must not write to stdout (uses logger)."""
+        path = tmp_path / "unique_packages.parquet"
+        pl.DataFrame({"github_repo": ["github.com/a/b"]}).write_parquet(path)
+        load_repos_from_unique_packages(str(path))
         assert capsys.readouterr().out == ""
 
 
@@ -183,6 +203,18 @@ class TestFetchRepoMetadata:
 
     def test_timeout_exhausted_returns_none(self):
         with patch("requests.get", side_effect=req.exceptions.Timeout):
+            with patch("time.sleep"):  # avoid slowing tests down
+                result = fetch_repo_metadata("owner", "repo", "fake-key", max_retries=2)
+        assert result is None
+
+    def test_ssl_error_exhausted_returns_none(self):
+        with patch("requests.get", side_effect=req.exceptions.SSLError("ssl eof")):
+            with patch("time.sleep"):  # avoid slowing tests down
+                result = fetch_repo_metadata("owner", "repo", "fake-key", max_retries=2)
+        assert result is None
+
+    def test_connection_error_exhausted_returns_none(self):
+        with patch("requests.get", side_effect=req.exceptions.ConnectionError("conn reset")):
             with patch("time.sleep"):  # avoid slowing tests down
                 result = fetch_repo_metadata("owner", "repo", "fake-key", max_retries=2)
         assert result is None

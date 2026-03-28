@@ -50,6 +50,9 @@ publish-feature-libraries-io:
 publish-feature-ossf-scorecard:
 	python ./src/capstone/features/publish_ossf_scorecard.py
 
+publish-feature-ossf-scorecard-cli:
+	python ./src/capstone/features/publish_ossf_scorecard_cli.py
+
 publish-feature-pypi-downloads:
 	python ./src/capstone/features/publish_pypi_downloads.py
 
