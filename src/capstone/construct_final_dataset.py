@@ -5,6 +5,82 @@ from settings import load_settings
 
 SETTINGS = load_settings()
 
+# Constants for column names to avoid typos and ensure consistency across the codebase.
+
+# ID columns - these are the columns that uniquely identify a package/repository and are used for joining datasets.
+ID_REPOSITORY_NAME = "github_repo"
+ID_PACKAGE_NAME = "package_name"
+
+# Control (C) variable columns:
+
+C_PACKAGE_DEPENDED_ON_COUNT = "package_depended_on_count"
+C_PACKAGE_TOTAL_DOWNLOADS = "package_total_downloads"
+C_REPOSITORY_AGE_IN_YEARS = "github_repo_age_in_years"
+C_REPOSITORY_COMMIT_STALENESS_IN_DAYS = "github_repo_commit_staleness_in_days"
+C_REPOSITORY_CONTRIBUTIONS_COUNT = "github_repo_contributions_count"
+C_REPOSITORY_SIZE_IN_KB = "github_repo_size_in_kb"
+
+ALL_CONTROL_VARIABLES = [
+    C_PACKAGE_DEPENDED_ON_COUNT,
+    C_PACKAGE_TOTAL_DOWNLOADS,
+    C_REPOSITORY_AGE_IN_YEARS,
+    C_REPOSITORY_COMMIT_STALENESS_IN_DAYS,
+    C_REPOSITORY_CONTRIBUTIONS_COUNT,
+    C_REPOSITORY_SIZE_IN_KB,
+]
+
+# Predictor (P) variable columns:
+
+P_BINARY_ARTIFACTS = "binary_artifacts" # Presence of binary artifacts in the repository.
+P_BRANCH_PROTECTION = "branch_protection" # Implementation of branch protection rules.
+P_CI_TESTS = "ci_tests" # Presence of continuous integration testing (e.g., GitHub Actions, Prow).
+P_CII_BEST_PRACTICES = "cii_best_practices" # Adherence to the OpenSSF (formerly CII) Best Practices Badge at the passing, silver, or gold
+P_CODE_REVIEW = "code_review" # Requirement of code reviews before merging changes.
+P_CONTRIBUTORS = "contributors" # Involvement of contributors from at least two different organizations.
+P_DANGEROUS_WORKFLOW = "dangerous_workflow"
+P_DEPENDENCY_UPDATE_TOOL = "dependency_update_tool"
+P_FUZZING = "fuzzing"
+P_LICENSE = "license"
+P_MAINTAINED = "maintained"
+P_PACKAGING = "packaging" # Adherence to packaging best practices.
+P_PINNED_DEPENDENCIES = "pinned_dependencies"
+P_SAST = "sast" #  Use of static application security testing.
+P_SECURITY_POLICY = "security_policy"
+P_SIGNED_RELEASES = "signed_releases" # Use of signed releases.
+P_TOKEN_PERMISSIONS = "token_permissions"
+
+P_AGGREGATED_SCORE = "aggregated_score"
+
+ALL_PREDICTOR_VARIABLES = [
+    P_BINARY_ARTIFACTS,
+    P_BRANCH_PROTECTION,
+    P_CI_TESTS,
+    P_CII_BEST_PRACTICES,
+    P_CODE_REVIEW,
+    P_CONTRIBUTORS,
+    P_DANGEROUS_WORKFLOW,
+    P_DEPENDENCY_UPDATE_TOOL,
+    P_FUZZING,
+    P_LICENSE,
+    P_MAINTAINED,
+    P_PACKAGING,
+    P_PINNED_DEPENDENCIES,
+    P_SAST,
+    P_SECURITY_POLICY,
+    P_SIGNED_RELEASES,
+    P_TOKEN_PERMISSIONS,
+
+    P_AGGREGATED_SCORE,
+]
+
+
+# Target (T) variable columns:
+T_VULNERABILITY_COUNT = "vul_count"
+
+ALL_TARGET_VARIABLES = [
+    T_VULNERABILITY_COUNT,
+]
+
 
 class FinalDatasetConstructor:
 
@@ -14,8 +90,8 @@ class FinalDatasetConstructor:
         unique_repos = (
             init_df
                 .select(
-                    pl.col("package_name"),
-                    pl.col("github_repo"),
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col(ID_REPOSITORY_NAME),
                 )
                 .unique()
                 .collect()
@@ -28,10 +104,10 @@ class FinalDatasetConstructor:
         return (
             data
                 .select(
-                    pl.col("package_name"),
-                    pl.col("github_repo"),
-                    pl.col("repo_age_years").alias("github_repo_age_in_years"),
-                    pl.col("commit_staleness_days").alias("github_repo_commit_staleness_in_days"),
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col(ID_REPOSITORY_NAME),
+                    pl.col("repo_age_years").alias(C_REPOSITORY_AGE_IN_YEARS),
+                    pl.col("commit_staleness_days").alias(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
                 )
         )
 
@@ -41,30 +117,28 @@ class FinalDatasetConstructor:
         #return deps
         return (
             self.df_initial_dataset
-                .join(deps, on="package_name", how="left")
+                .join(deps, on=ID_PACKAGE_NAME, how="left")
                 .select(
-                    pl.col("package_name"),
-                    pl.col("dependency_count").alias("package_depended_on_count"),
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col("dependency_count").alias(C_PACKAGE_DEPENDED_ON_COUNT),
                 )
                 # fill nulls with 0, since if a package is not present in the dependency count dataset, it means it has 0 dependencies
                 .fill_null(0)
-
         )
 
 
     @cached_property
     def df_feature_total_downloads(self) -> pl.DataFrame:
-        """Load the total downloads feature dataset and compute the mean total downloads per package.
+        """Load the total downloads feature dataset and compute the sum total downloads per package.
 
-        We compute the mean here since there are multiple entries for the same package (e.g., different versions),
+        We compute the sum here since there are multiple entries for the same package (e.g., different versions),
         and we want a single value per package for the final dataset.
         """
         total_download_df = pl.scan_parquet(SETTINGS.feature_total_downloads_path)
         return (
             total_download_df
-                .group_by("package_name")
-                # TODO: kshcherb: check if computing the mean is the best approach here
-                .agg(pl.col("total_downloads").mean().alias("package_total_downloads"))
+                .group_by(ID_PACKAGE_NAME)
+                .agg(pl.col("total_downloads").sum().alias(C_PACKAGE_TOTAL_DOWNLOADS))
                 .collect()
         )
 
@@ -74,9 +148,9 @@ class FinalDatasetConstructor:
         return (
             librariesio
                 .select(
-                    pl.col("full_name").alias("github_repo"),
-                    pl.col("contributions_count").alias("github_repo_contributions_count"),
-                    pl.col("size").alias("github_repo_size_in_kb"),
+                    pl.col("full_name").alias(ID_REPOSITORY_NAME),
+                    pl.col("contributions_count").alias(C_REPOSITORY_CONTRIBUTIONS_COUNT),
+                    pl.col("size").alias(C_REPOSITORY_SIZE_IN_KB),
                 )
                 .collect()
         )
@@ -87,9 +161,9 @@ class FinalDatasetConstructor:
         return (
             contributions_and_size
                 .select(
-                    pl.col("github_repo"),
-                    pl.col("contributions_count").alias("github_repo_contributions_count"),
-                    pl.col("size_in_kb").alias("github_repo_size_in_kb"),
+                    pl.col(ID_REPOSITORY_NAME),
+                    pl.col("contributions_count").alias(C_REPOSITORY_CONTRIBUTIONS_COUNT),
+                    pl.col("size_in_kb").alias(C_REPOSITORY_SIZE_IN_KB),
                 )
                 .collect()
         )
@@ -100,24 +174,28 @@ class FinalDatasetConstructor:
         return (
             data
                 .select(
-                    pl.col("repo_name").alias("github_repo"),
-                    pl.col("Binary-Artifacts").alias("binary_artifacts"),
-                    pl.col("Branch-Protection").alias("branch_protection"),
-                    pl.col("Code-Review").alias("code_review"),
-                    pl.col("Dangerous-Workflow").alias("dangerous_workflow"),
-                    pl.col("License").alias("license"),
-                    pl.col("Maintained").alias("maintained"),
-                    pl.col("Pinned-Dependencies").alias("pinned_dependencies"),
-                    pl.col("SAST").alias("sast"),
-                    pl.col("Security-Policy").alias("security_policy"),
-                    #pl.col("Fuzzing").alias("fuzzing"),
-                    pl.col("Token-Permissions").alias("token_permissions"),
-                    #pl.col("Dependency-Update-Tool").alias("depedency_update_tool"),
-                    #pl.col("Signed-Releases").alias("signed_releases"),
+                    pl.col("repo_name").alias(ID_REPOSITORY_NAME),
 
-                    #pl.col("CII-Best-Practices").alias("cii_best_practices"),
-                    pl.col("Vulnerabilities").alias("vulnerabilities_count"),
-                    pl.col("aggregate_score").alias("aggregated_score"),
+                    pl.col("Binary-Artifacts").alias(P_BINARY_ARTIFACTS),
+                    pl.col("Branch-Protection").alias(P_BRANCH_PROTECTION),
+                    pl.col("CI-Tests").alias(P_CI_TESTS),
+                    pl.col("CII-Best-Practices").alias(P_CII_BEST_PRACTICES),
+                    pl.col("Code-Review").alias(P_CODE_REVIEW),
+                    pl.col("Contributors").alias(P_CONTRIBUTORS),
+                    pl.col("Dangerous-Workflow").alias(P_DANGEROUS_WORKFLOW),
+                    pl.col("Dependency-Update-Tool").alias(P_DEPENDENCY_UPDATE_TOOL),
+                    pl.col("Fuzzing").alias(P_FUZZING),
+                    pl.col("License").alias(P_LICENSE),
+                    pl.col("Maintained").alias(P_MAINTAINED),
+                    pl.col("Packaging").alias(P_PACKAGING),
+                    pl.col("Pinned-Dependencies").alias(P_PINNED_DEPENDENCIES),
+                    pl.col("SAST").alias(P_SAST),
+                    pl.col("Security-Policy").alias(P_SECURITY_POLICY),
+                    pl.col("Signed-Releases").alias(P_SIGNED_RELEASES),
+                    pl.col("Token-Permissions").alias(P_TOKEN_PERMISSIONS),
+
+                    pl.col("aggregate_score").alias(P_AGGREGATED_SCORE),
+                    pl.col("Vulnerabilities").alias(T_VULNERABILITY_COUNT),
                 )
                 .collect()
         )
@@ -127,14 +205,51 @@ class FinalDatasetConstructor:
         """
         merged_df = (
             self.df_initial_dataset
-            .join(self.df_feature_repo_age_and_commit_staleness, on=["package_name", "github_repo"], how="left")
-            .join(self.df_feature_dependency_count, on="package_name", how="left")
-            .join(self.df_feature_total_downloads, on="package_name", how="left")
-            #.join(self.df_libraries_io, on="github_repo", how="left")
-            .join(self.df_feature_repo_contributions_and_size, on="github_repo", how="left")
-            .join(self.df_ossf_scorecard, on="github_repo", how="left")
+            .join(self.df_feature_repo_age_and_commit_staleness, on=[ID_PACKAGE_NAME, ID_REPOSITORY_NAME], how="left")
+            .join(self.df_feature_dependency_count, on=ID_PACKAGE_NAME, how="left")
+            .join(self.df_feature_total_downloads, on=ID_PACKAGE_NAME, how="left")
+            #.join(self.df_libraries_io, on=ID_REPOSITORY_NAME, how="left")
+            .join(self.df_feature_repo_contributions_and_size, on=ID_REPOSITORY_NAME, how="left")
+            .join(self.df_ossf_scorecard, on=ID_REPOSITORY_NAME, how="left")
         )
-        return merged_df
+
+        processed_df = (
+            merged_df
+                .select(
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col(ID_REPOSITORY_NAME),
+
+                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
+                    pl.col(C_REPOSITORY_AGE_IN_YEARS),
+                    pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
+                    pl.col(C_REPOSITORY_CONTRIBUTIONS_COUNT),
+                    pl.col(C_REPOSITORY_SIZE_IN_KB),
+
+                    pl.col(P_AGGREGATED_SCORE),
+                    pl.col(P_BINARY_ARTIFACTS),
+                    pl.col(P_BRANCH_PROTECTION),
+                    pl.col(P_CI_TESTS),
+                    pl.col(P_CII_BEST_PRACTICES),
+                    pl.col(P_CODE_REVIEW),
+                    pl.col(P_CONTRIBUTORS),
+                    pl.col(P_DANGEROUS_WORKFLOW),
+                    pl.col(P_DEPENDENCY_UPDATE_TOOL),
+                    pl.col(P_FUZZING),
+                    pl.col(P_LICENSE),
+                    pl.col(P_MAINTAINED),
+                    pl.col(P_PACKAGING),
+                    pl.col(P_PINNED_DEPENDENCIES),
+                    pl.col(P_SAST),
+                    pl.col(P_SECURITY_POLICY),
+                    pl.col(P_SIGNED_RELEASES),
+                    pl.col(P_TOKEN_PERMISSIONS),
+
+                    pl.col(T_VULNERABILITY_COUNT),
+                )
+        )
+
+        return processed_df
 
 
 
@@ -145,6 +260,8 @@ def main():
         construct()
             .drop_nulls()
     )
+
+    print(final_df.describe())
 
     final_df.write_parquet(SETTINGS.final_dataset_path)
 

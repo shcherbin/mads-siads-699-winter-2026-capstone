@@ -38,6 +38,9 @@ _confirm-upload:
 	    echo "exiting without upload"
 	fi
 
+construct-final-dataset:
+	python ./src/capstone/construct_final_dataset.py
+
 compute-feature-dependency-count:
 	python ./src/capstone/features/compute_dependency_count.py
 
