@@ -73,12 +73,15 @@ ALL_PREDICTOR_VARIABLES = [
     P_AGGREGATED_SCORE,
 ]
 
-
 # Target (T) variable columns:
 T_VULNERABILITY_COUNT = "vul_count"
+T_MTTR = "mttr"
+T_MTTU = "mttu"
 
 ALL_TARGET_VARIABLES = [
     T_VULNERABILITY_COUNT,
+    T_MTTR,
+    T_MTTU,
 ]
 
 
@@ -200,7 +203,43 @@ class FinalDatasetConstructor:
                 .collect()
         )
 
-    def __call__(self) -> pl.DataFrame:
+    @cached_property
+    def df_mttu_mttr(self) -> pl.DataFrame:
+        df = (
+            pl.read_parquet(f"{SETTINGS.mttu_mttr_path}/*.parquet")
+                .sort(["package_name", "snapshot_start"])
+        )
+        # latest snapshot (for avg_ttu)
+        latest_avg_ttu = (
+            df
+            .group_by("package_name")
+            .agg([
+                pl.col("avg_ttu").last().alias("avg_ttu")
+            ])
+        )
+
+        # latest non-zero avg_ttr
+        latest_avg_ttr = (
+            df
+            .filter(pl.col("avg_ttr") != 0)
+            .group_by("package_name")
+            .agg([
+                pl.col("avg_ttr").last().alias("avg_ttr")
+            ])
+        )
+
+        return (
+            latest_avg_ttu.join(latest_avg_ttr, on="package_name", how="left")
+                .fill_null(0)
+                .select(
+                    pl.col("package_name").alias(ID_PACKAGE_NAME),
+                    pl.col("avg_ttu").alias(T_MTTU),
+                    pl.col("avg_ttr").alias(T_MTTR),
+                )
+        )
+
+    @cached_property
+    def df_final(self) -> pl.DataFrame:
         """Merge the initial dataset with the feature datasets to create the final dataset.
         """
         merged_df = (
@@ -211,6 +250,7 @@ class FinalDatasetConstructor:
             #.join(self.df_libraries_io, on=ID_REPOSITORY_NAME, how="left")
             .join(self.df_feature_repo_contributions_and_size, on=ID_REPOSITORY_NAME, how="left")
             .join(self.df_ossf_scorecard, on=ID_REPOSITORY_NAME, how="left")
+            .join(self.df_mttu_mttr, on=ID_PACKAGE_NAME, how="left")
         )
 
         processed_df = (
@@ -246,24 +286,82 @@ class FinalDatasetConstructor:
                     pl.col(P_TOKEN_PERMISSIONS),
 
                     pl.col(T_VULNERABILITY_COUNT),
+                    pl.col(T_MTTU),
+                    pl.col(T_MTTR),
                 )
+                #.drop_nulls()
         )
 
         return processed_df
 
+    @cached_property
+    def df_rq1(self) -> pl.DataFrame:
+        return (
+            self.df_final
+                .select(
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col(ID_REPOSITORY_NAME),
+
+                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
+                    pl.col(C_REPOSITORY_AGE_IN_YEARS),
+                    pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
+                    pl.col(C_REPOSITORY_CONTRIBUTIONS_COUNT),
+                    pl.col(C_REPOSITORY_SIZE_IN_KB),
+
+                    pl.col(P_AGGREGATED_SCORE),
+
+                    pl.col(T_VULNERABILITY_COUNT),
+                    pl.col(T_MTTR),
+                    pl.col(T_MTTU),
+                )
+        )
+
+    @cached_property
+    def df_rq2(self) -> pl.DataFrame:
+        return (
+            self.df_final
+                .select(
+                    pl.col(ID_PACKAGE_NAME),
+                    pl.col(ID_REPOSITORY_NAME),
+
+                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
+                    pl.col(C_REPOSITORY_AGE_IN_YEARS),
+                    pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
+                    pl.col(C_REPOSITORY_CONTRIBUTIONS_COUNT),
+                    pl.col(C_REPOSITORY_SIZE_IN_KB),
+
+                    pl.col(P_BINARY_ARTIFACTS),
+                    pl.col(P_BRANCH_PROTECTION),
+                    pl.col(P_CI_TESTS),
+                    pl.col(P_CODE_REVIEW),
+                    pl.col(P_CONTRIBUTORS),
+                    pl.col(P_DEPENDENCY_UPDATE_TOOL),
+                    pl.col(P_LICENSE),
+                    pl.col(P_MAINTAINED),
+                    pl.col(P_PINNED_DEPENDENCIES),
+                    pl.col(P_SAST),
+                    pl.col(P_SECURITY_POLICY),
+
+                    pl.col(T_VULNERABILITY_COUNT),
+                    pl.col(T_MTTR),
+                    pl.col(T_MTTU),
+                )
+        )
 
 
 
 def main():
-    construct = FinalDatasetConstructor()
-    final_df  = (
-        construct()
-            .drop_nulls()
-    )
-
+    constructor = FinalDatasetConstructor()
+    final_df  = constructor.df_final
+    print("Final dataset:")
     print(final_df.describe())
 
     final_df.write_parquet(SETTINGS.final_dataset_path)
+
+    constructor.df_rq1.write_parquet(SETTINGS.research_question_1_dataset_path)
+    constructor.df_rq2.write_parquet(SETTINGS.research_question_2_dataset_path)
 
 
 
