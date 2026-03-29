@@ -106,6 +106,14 @@ class Settings(BaseSettings):
     def final_dataset_path(self) -> str:
         return f'{self.augmented_data_path}/final_dataset.parquet'
 
+    @property
+    def research_question_1_dataset_path(self) -> str:
+        return f'{self.augmented_data_path}/RQ_1_dataset.parquet'
+
+    @property
+    def research_question_2_dataset_path(self) -> str:
+        return f'{self.augmented_data_path}/RQ_2_dataset.parquet'
+
 
 def load_settings() -> Settings:
     return Settings()
