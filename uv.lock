@@ -555,15 +555,15 @@ wheels = [
 
 [[package]]
 name = "dependency-metrics"
-version = "0.1.0"
-source = { git = "https://github.com/imranur-rahman/dependency-update-metrics#bcbf2f7be4cba96b279125950b6717db6c2b8a4e" }
+version = "0.1.3"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "openpyxl" },
-    { name = "packaging" },
-    { name = "pandas" },
-    { name = "pyarrow" },
     { name = "requests" },
-    { name = "tqdm" },
+    { name = "sh" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0c/ed/2a3f846263db95b1734f6bd55dda17b12966f33a0fa2fd2bb54c90dd8689/dependency_metrics-0.1.3.tar.gz", hash = "sha256:7c9ab734a420d4491ed8bb75b4a17bbf94395d7d3e74bb98198dee9901b118b6", size = 13019, upload-time = "2025-05-07T20:08:03.352Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/77/8c922caca0f8c972ba3b52c41ee9929578ea2f905e527f28cb135b4def60/dependency_metrics-0.1.3-py3-none-any.whl", hash = "sha256:2fc46d13d426c54efceadc2a753c31fd59c4a2e1dedd740ead60284fc16b5065", size = 12360, upload-time = "2025-05-07T20:08:01.831Z" },
 ]
 
 [[package]]
@@ -1246,7 +1246,7 @@ requires-dist = [
     { name = "bokeh", specifier = ">=3.8.0" },
     { name = "colorcet", specifier = ">=3.1.0" },
     { name = "datashader", specifier = ">=0.18.2" },
-    { name = "dependency-metrics", git = "https://github.com/imranur-rahman/dependency-update-metrics" },
+    { name = "dependency-metrics", specifier = ">=0.1.3" },
     { name = "h2", specifier = ">=4.3.0" },
     { name = "holoviews", specifier = ">=1.21.0" },
     { name = "httpx", specifier = ">=0.28.1" },
@@ -1274,7 +1274,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "dependency-metrics", git = "https://github.com/imranur-rahman/dependency-update-metrics" },
+    { name = "dependency-metrics", specifier = ">=0.1.3" },
     { name = "ipykernel", specifier = ">=6.30.1" },
     { name = "jupyterlab", specifier = ">=4.4.7" },
     { name = "pytest", specifier = ">=8.4.2" },
@@ -2554,6 +2554,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c", size = 1319958, upload-time = "2025-05-27T00:56:51.443Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922", size = 1201486, upload-time = "2025-05-27T00:56:49.664Z" },
+]
+
+[[package]]
+name = "sh"
+version = "2.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/52/f43920223c93e31874677c681b8603d36a40d3d8502d3a37f80d3995d43e/sh-2.2.2.tar.gz", hash = "sha256:653227a7c41a284ec5302173fbc044ee817c7bad5e6e4d8d55741b9aeb9eb65b", size = 345866, upload-time = "2025-02-24T07:16:25.363Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/98/d82f14ac7ffedbd38dfa2383f142b26d18d23ca6cf35a40f4af60df666bd/sh-2.2.2-py3-none-any.whl", hash = "sha256:e0b15b4ae8ffcd399bc8ffddcbd770a43c7a70a24b16773fbb34c001ad5d52af", size = 38295, upload-time = "2025-02-24T07:16:23.782Z" },
 ]
 
 [[package]]
