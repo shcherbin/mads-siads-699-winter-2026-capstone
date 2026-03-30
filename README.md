@@ -68,7 +68,9 @@ This builds and runs the project’s development container, installing all depen
 
 </details>
 
-### Common issues
+<details>
+<summary>Common Issues</summary>
+
 If you are on windows and your notebooks do not run, 
 adjust the WSL memory size 
 ```
@@ -85,3 +87,4 @@ then run:
 ```
 wsl --shutdown
 ```
+</details>
