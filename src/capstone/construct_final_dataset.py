@@ -13,7 +13,7 @@ ID_PACKAGE_NAME = "package_name"
 
 # Control (C) variable columns:
 
-C_PACKAGE_DEPENDED_ON_COUNT = "package_depended_on_count"
+C_PACKAGE_DEPENDED_ON_COUNT = "package_dependency_count"
 C_PACKAGE_TOTAL_DOWNLOADS = "package_total_downloads"
 C_REPOSITORY_AGE_IN_YEARS = "github_repo_age_in_years"
 C_REPOSITORY_COMMIT_STALENESS_IN_DAYS = "github_repo_commit_staleness_in_days"
