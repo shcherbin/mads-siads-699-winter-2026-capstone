@@ -13,7 +13,7 @@ ID_PACKAGE_NAME = "package_name"
 
 # Control (C) variable columns:
 
-C_PACKAGE_DEPENDED_ON_COUNT = "package_depended_on_count"
+C_PACKAGE_DEPENDENCY_COUNT = "package_dependency_count"
 C_PACKAGE_TOTAL_DOWNLOADS = "package_total_downloads"
 C_REPOSITORY_AGE_IN_YEARS = "github_repo_age_in_years"
 C_REPOSITORY_COMMIT_STALENESS_IN_DAYS = "github_repo_commit_staleness_in_days"
@@ -21,7 +21,7 @@ C_REPOSITORY_CONTRIBUTIONS_COUNT = "github_repo_contributions_count"
 C_REPOSITORY_SIZE_IN_KB = "github_repo_size_in_kb"
 
 ALL_CONTROL_VARIABLES = [
-    C_PACKAGE_DEPENDED_ON_COUNT,
+    C_PACKAGE_DEPENDENCY_COUNT,
     C_PACKAGE_TOTAL_DOWNLOADS,
     C_REPOSITORY_AGE_IN_YEARS,
     C_REPOSITORY_COMMIT_STALENESS_IN_DAYS,
@@ -123,7 +123,7 @@ class FinalDatasetConstructor:
                 .join(deps, on=ID_PACKAGE_NAME, how="left")
                 .select(
                     pl.col(ID_PACKAGE_NAME),
-                    pl.col("dependency_count").alias(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col("dependency_count").alias(C_PACKAGE_DEPENDENCY_COUNT),
                 )
                 # fill nulls with 0, since if a package is not present in the dependency count dataset, it means it has 0 dependencies
                 .fill_null(0)
@@ -259,7 +259,7 @@ class FinalDatasetConstructor:
                     pl.col(ID_PACKAGE_NAME),
                     pl.col(ID_REPOSITORY_NAME),
 
-                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_DEPENDENCY_COUNT),
                     pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
                     pl.col(C_REPOSITORY_AGE_IN_YEARS),
                     pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
@@ -302,7 +302,7 @@ class FinalDatasetConstructor:
                     pl.col(ID_PACKAGE_NAME),
                     pl.col(ID_REPOSITORY_NAME),
 
-                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_DEPENDENCY_COUNT),
                     pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
                     pl.col(C_REPOSITORY_AGE_IN_YEARS),
                     pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
@@ -325,7 +325,7 @@ class FinalDatasetConstructor:
                     pl.col(ID_PACKAGE_NAME),
                     pl.col(ID_REPOSITORY_NAME),
 
-                    pl.col(C_PACKAGE_DEPENDED_ON_COUNT),
+                    pl.col(C_PACKAGE_DEPENDENCY_COUNT),
                     pl.col(C_PACKAGE_TOTAL_DOWNLOADS),
                     pl.col(C_REPOSITORY_AGE_IN_YEARS),
                     pl.col(C_REPOSITORY_COMMIT_STALENESS_IN_DAYS),
