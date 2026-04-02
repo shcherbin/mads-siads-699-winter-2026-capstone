@@ -53,9 +53,9 @@ def compute_dependency_edges(frame: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def compute_dependency_count_without_version(adopter_edges_frame: pl.LazyFrame) -> pl.LazyFrame:
-    """Compute the dependency count of each package without considering the version.
+    """Compute the number of unique direct dependencies for each package, ignoring version.
 
-    The dependency count of a package is defined as the number of direct dependencies it has across all snapshots.
+    Groups by package_name and counts the distinct dep_name values across all snapshots.
 
     Output DataFrame schema:
     Schema([
@@ -71,17 +71,16 @@ def compute_dependency_count_without_version(adopter_edges_frame: pl.LazyFrame) 
                 "dep_name",
             ]
         )
-        .group_by("dep_name")
-        .agg(adopting_packages=pl.n_unique("package_name"))
-        .sort("adopting_packages", descending=True)
-        .rename({"dep_name": "package_name", "adopting_packages": "dependency_count"})
+        .group_by("package_name")
+        .agg(dependency_count=pl.n_unique("dep_name"))
+        .sort("dependency_count", descending=True)
     )
 
 
 def compute_dependency_count_with_version(adopter_edges_frame: pl.LazyFrame) -> pl.LazyFrame:
-    """Compute the dependency count of each package considering the version.
+    """Compute the number of unique direct dependencies for each package version.
 
-    The dependency count of a package is defined as the number of direct dependencies it has across all snapshots.
+    Groups by (package_name, package_version) and counts the distinct dep_name values.
 
     Output DataFrame schema:
     Schema([
@@ -99,16 +98,9 @@ def compute_dependency_count_with_version(adopter_edges_frame: pl.LazyFrame) -> 
                 "dep_version",
             ]
         )
-        .group_by(["dep_name", "dep_version"])
-        .agg(adopting_packages=pl.n_unique("package_name"))
-        .sort("adopting_packages", descending=True)
-        .rename(
-            {
-                "dep_name": "package_name",
-                "dep_version": "package_version",
-                "adopting_packages": "dependency_count",
-            }
-        )
+        .group_by(["package_name", "package_version"])
+        .agg(dependency_count=pl.n_unique("dep_name"))
+        .sort("dependency_count", descending=True)
     )
 
 
