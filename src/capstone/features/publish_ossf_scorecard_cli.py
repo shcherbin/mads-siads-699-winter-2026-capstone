@@ -17,6 +17,7 @@ for repositories that were not available in the bigquery dataset.
 """
 
 import json
+import re
 from datetime import date as Date
 from pathlib import Path
 
@@ -88,6 +89,11 @@ def load_cli_scorecards() -> pl.DataFrame:
         scorecard_date: Date = Date.fromisoformat(sc["date"][:10])
         repo_name: str = sc["repo"]["name"]
         aggregate_score: float = sc["score"]
+        vuln_detected: int | None = None
+        for check in sc["checks"]:
+            if check["name"] == "Vulnerabilities":
+                m = re.match(r"(\d+)", check.get("reason", ""))
+                vuln_detected = int(m.group(1)) if m else 0
         for check in sc["checks"]:
             rows.append(
                 {
@@ -96,6 +102,7 @@ def load_cli_scorecards() -> pl.DataFrame:
                     "aggregate_score": aggregate_score,
                     "check_name": check["name"],
                     "check_score": check["score"],
+                    "vulnerabilities_detected": vuln_detected,
                 }
             )
 
@@ -107,6 +114,7 @@ def load_cli_scorecards() -> pl.DataFrame:
             "aggregate_score": pl.Float64,
             "check_name": pl.String,
             "check_score": pl.Int64,
+            "vulnerabilities_detected": pl.Int64,
         },
     )
 
@@ -121,7 +129,7 @@ def publish_cli_scorecard(df: pl.DataFrame) -> pl.DataFrame:
         pl.col("repo_name").str.to_lowercase().str.replace_all("github.com/", "").alias("repo_name")
     )
     pivoted = normalized.pivot(
-        index=["scorecard_date", "repo_name", "aggregate_score"],
+        index=["scorecard_date", "repo_name", "aggregate_score", "vulnerabilities_detected"],
         on="check_name",
         values="check_score",
     )
@@ -129,7 +137,7 @@ def publish_cli_scorecard(df: pl.DataFrame) -> pl.DataFrame:
         if check not in pivoted.columns:
             logger.warning(f"Check '{check}' not found in CLI data — adding null column")
             pivoted = pivoted.with_columns(pl.lit(None).cast(pl.Int64).alias(check))
-    return pivoted.select(["scorecard_date", "repo_name", "aggregate_score"] + list(EXPECTED_CHECKS))
+    return pivoted.select(["scorecard_date", "repo_name", "aggregate_score", "vulnerabilities_detected"] + list(EXPECTED_CHECKS))
 
 
 def main() -> None:
@@ -143,6 +151,13 @@ def main() -> None:
     if output_path.exists():
         logger.info(f"Appending to existing feature file at {output_path}")
         existing = pl.read_parquet(str(output_path))
+
+        # Backfill vulnerabilities_detected from CLI data onto existing rows
+        vuln_lookup = cli_frame.select("repo_name", "vulnerabilities_detected").unique(subset=["repo_name"])
+        existing = existing.drop("vulnerabilities_detected", strict=False).join(
+            vuln_lookup, on="repo_name", how="left"
+        )
+
         combined = pl.concat([existing, cli_frame], how="diagonal")
     else:
         combined = cli_frame
