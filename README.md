@@ -69,6 +69,20 @@ This builds and runs the project’s development container, installing all depen
 </details>
 
 <details>
+<summary>Recommended Hardware Minimums</summary>
+
+| Component | Minimum Requirement | Recommended (for 60GB WSL config) |
+| :--- | :--- | :--- |
+| **Processor (CPU)** | 8 Cores (Intel i7 / Ryzen 7 / Apple M2) | 16 Cores (Intel i9 / Ryzen 9 / Apple Max) |
+| **Memory (RAM)** | 32 GB | 64 GB |
+| **Storage** | 50 GB Free SSD Space | 200 GB Free SSD Space |
+| **OS** | Windows 11 (WSL2) / macOS / Linux | Linux (Ubuntu) or Windows 11 (WSL2) |
+| **Virtualization** | BIOS Virtualization Enabled | BIOS Virtualization Enabled |
+
+</details>
+
+
+<details>
 <summary>Common Issues</summary>
 
 If you are on windows and your notebooks do not run, 
