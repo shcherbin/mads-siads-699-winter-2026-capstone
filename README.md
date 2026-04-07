@@ -3,17 +3,27 @@
 By [Cyril Scerbin](mailto:kshcherb@umich.edu), [Jason Harris](mailto:harjason@umich.edu), [Emily Lerner](mailto:eslerner@umich.edu)
 
 -----
+<details>
+<summary>Prerequisites</summary>
+
+Before completing `Local Development Setup`, ensure your machine meets the following software requirements:
+
+### Required Software
+* **[Docker Desktop](https://www.docker.com/products/docker-desktop)**: Required to host the development containers.
+    * *Windows Users:* Ensure **WSL2** is installed and updated.
+* **[Visual Studio Code](https://code.visualstudio.com/)**: The recommended IDE for this project.
+* **[Dev Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)**: Allows VS Code to open the project inside the Docker environment.
+
+### Recommended Tools
+* **[direnv](https://direnv.net/)**: For automatic loading of environment variables from your `.env` file.
+* **[Git](https://git-scm.com/)**: To clone and manage project versions.
+
+</details>
 
 <details>
 <summary>Local Development Setup</summary>
 
-This project uses Dev Containers in Visual Studio Code and Docker Desktop to provide a reproducible and isolated development environment.
-
-Before starting, ensure you have the following installed:
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) (required to run containers)
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Dev Containers extension for VS Code](https://code.visualstudio.com/docs/devcontainers/containers)
+Before following this setup, please see the `Prerequisites` section.
 
 ## Clone the Repository
 First, fetch the project from GitHub:
