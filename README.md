@@ -93,22 +93,37 @@ This builds and runs the project’s development container, installing all depen
 
 
 <details>
-<summary>Common Issues</summary>
+<summary>Common Issues (Check this if your code will not run) </summary>
 
-If you are on windows and your notebooks do not run, 
-adjust the WSL memory size 
-```
-notepad.exe %UserProfile%/.wslconfig
-```
-and add the following:
-```
-[wsl2]
-memory=60GB #as allows on your machine.
-processors=16
-swap=0
-```
-then run:
-```
-wsl --shutdown
-```
+## Adjusting Docker Desktop Resource Limits
+
+If your project is crashing with `Out of Memory` (OOM) errors, you may need to manually increase the RAM and CPU allocated to Docker.
+
+### For macOS and Linux
+1. Open **Docker Desktop**.
+2. Click the **Settings** (gear icon) in the top-right corner.
+3. Select **Resources** from the left-hand sidebar.
+4. Under **Advanced**, use the sliders to adjust:
+   - **CPUs**: Set to at least 8 (or half your total cores).
+   - **Memory**: Increase to **60GB** (if your hardware allows).
+5. Click **Apply & Restart**.
+
+### For Windows (WSL2 Backend)
+In the modern WSL2 mode, Docker Desktop does not use sliders. Instead, it "borrows" memory from the global WSL2 utility VM.
+
+1. **Check if sliders are missing:** Go to `Settings > Resources`. If you see a message saying *"You are using the WSL 2 backend"*, the sliders will be hidden.
+2. **The Fix:** You must use the `.wslconfig` method:
+   - Press `Win + R`, type `%UserProfile%`, and press Enter.
+   - Edit (or create) the `.wslconfig` file.
+   - Add/Update these lines:
+     ```ini
+     [wsl2]
+     memory=60GB
+     processors=16
+     ```
+3. **Restart:** You **must** run `wsl --shutdown` in PowerShell for these changes to take effect.
+
+> [!TIP]
+> **Pro-Tip for Mac (Apple Silicon):** Ensure **"Use Virtualization framework"** and **"VirtioFS"** are enabled under `Settings > General` and `Resources > File Sharing` for a 10x boost in file-reading speed within your notebooks.
+
 </details>
