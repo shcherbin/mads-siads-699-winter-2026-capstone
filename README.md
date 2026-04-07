@@ -4,7 +4,7 @@ By [Cyril Scerbin](mailto:kshcherb@umich.edu), [Jason Harris](mailto:harjason@um
 
 -----
 <details>
-<summary>Prerequisites</summary>
+<summary><h1 style="display: inline;">Prerequisites</h1></summary>
 
 Before completing `Local Development Setup`, ensure your machine meets the following software requirements:
 
@@ -18,10 +18,19 @@ Before completing `Local Development Setup`, ensure your machine meets the follo
 * **[direnv](https://direnv.net/)**: For automatic loading of environment variables from your `.env` file.
 * **[Git](https://git-scm.com/)**: To clone and manage project versions.
 
+### Recommended Hardware Minimums
+
+| Component | Minimum Requirement | Recommended (for 60GB WSL config) |
+| :--- | :--- | :--- |
+| **Processor (CPU)** | 8 Cores (Intel i7 / Ryzen 7 / Apple M2) | 16 Cores (Intel i9 / Ryzen 9 / Apple Max) |
+| **Memory (RAM)** | 32 GB | 64 GB |
+| **Storage** | 50 GB Free SSD Space | 200 GB Free SSD Space |
+| **OS** | Windows 11 (WSL2) / macOS / Linux | Linux (Ubuntu) or Windows 11 (WSL2) |
+| **Virtualization** | BIOS Virtualization Enabled | BIOS Virtualization Enabled |
 </details>
 
 <details>
-<summary>Local Development Setup</summary>
+<summary><h1 style="display: inline;">Local Development Setup and Run</h1></summary>
 
 Before following this setup, please see the `Prerequisites` section.
 
@@ -76,24 +85,16 @@ Dev Containers: Reopen in Container
 ```
 This builds and runs the project’s development container, installing all dependencies inside an isolated environment.
 
-</details>
+For additional information, see [Official Dev Container Guide](https://code.visualstudio.com/docs/devcontainers/containers).
 
-<details>
-<summary>Recommended Hardware Minimums</summary>
-
-| Component | Minimum Requirement | Recommended (for 60GB WSL config) |
-| :--- | :--- | :--- |
-| **Processor (CPU)** | 8 Cores (Intel i7 / Ryzen 7 / Apple M2) | 16 Cores (Intel i9 / Ryzen 9 / Apple Max) |
-| **Memory (RAM)** | 32 GB | 64 GB |
-| **Storage** | 50 GB Free SSD Space | 200 GB Free SSD Space |
-| **OS** | Windows 11 (WSL2) / macOS / Linux | Linux (Ubuntu) or Windows 11 (WSL2) |
-| **Virtualization** | BIOS Virtualization Enabled | BIOS Virtualization Enabled |
+## How to run code
+Once you can have verified that you are running in a dev container based on the above steps, you should be able to run notebooks by clicking on the `Run All` button at the top of VS Code. Similarly, the `Run` button should work for python scripts. The scripts and notebooks have been verified by our development team, so if you are running into an error, it is most likely an environment issue. See the `Common Issues (Check this if your code will not run)` section for potential resolutions, and verify that you have successfully setup the environment above. 
 
 </details>
 
-
 <details>
-<summary>Common Issues (Check this if your code will not run) </summary>
+
+<summary><h1 style="display: inline;">Common Issues (Check this if your code will not run)</h1></summary>
 
 ## Adjusting Docker Desktop Resource Limits
 
