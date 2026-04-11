@@ -152,6 +152,7 @@ def main() -> None:
 
     # Keep most recent scorecard_date per repo
     result = combined.sort("scorecard_date", descending=True).unique(subset=["repo_name"], keep="first")
+    result = result.with_columns(pl.col("vulnerabilities_detected").fill_null(0))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     logger.info(f"Writing {len(result)} rows to {output_path}")
