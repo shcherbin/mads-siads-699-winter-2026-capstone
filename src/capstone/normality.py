@@ -1,5 +1,6 @@
 import math
 import pandas as pd
+import pingouin as pg
 import seaborn as sns
 from matplotlib import pyplot as plt
 
@@ -21,3 +22,8 @@ def plot_distributions(data: pd.DataFrame, columns: list[str]) -> None:
 
     plt.tight_layout()
     plt.show()
+
+
+def run_multivariate_normality_test(data: pd.DataFrame, alpha: float = 0.05) -> None:
+    return pg.multivariate_normality(data, alpha=alpha)
+
