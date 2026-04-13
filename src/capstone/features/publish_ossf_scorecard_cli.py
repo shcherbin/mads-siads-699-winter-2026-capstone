@@ -2,18 +2,6 @@
 Publishes supplemental scorecard data that was gathered via the OSSF Scorecard CLI
 for repositories that were not available in the bigquery dataset.
 
-- similar to publish_ossf_scorecard.py: same destination, different source.
-
-- read jsonl file (scorecards_cli_results_path)
-    - only non-error lines
-    - if there are multiple lines for the same repo, keep the most recent one
-    - map json fields to the scorecard feature schema
-- transform jsonl to polars dataframe
-
-- append to existing feature parquet (diagonal concat to handle schema extension)
-    - deduplicate by repo_name, keeping the row with the most recent scorecard_date
-- write dataframe to parquet file
-
 """
 
 import json
@@ -164,6 +152,7 @@ def main() -> None:
 
     # Keep most recent scorecard_date per repo
     result = combined.sort("scorecard_date", descending=True).unique(subset=["repo_name"], keep="first")
+    result = result.with_columns(pl.col("vulnerabilities_detected").fill_null(0))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     logger.info(f"Writing {len(result)} rows to {output_path}")

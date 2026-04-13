@@ -198,7 +198,7 @@ class FinalDatasetConstructor:
                     pl.col("Token-Permissions").alias(P_TOKEN_PERMISSIONS),
 
                     pl.col("aggregate_score").alias(P_AGGREGATED_SCORE),
-                    pl.col("Vulnerabilities").alias(T_VULNERABILITY_COUNT),
+                    pl.col("vulnerabilities_detected").alias(T_VULNERABILITY_COUNT),
                 )
                 .collect()
         )
