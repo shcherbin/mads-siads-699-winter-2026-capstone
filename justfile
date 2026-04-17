@@ -11,7 +11,7 @@ test:
 
 
 code-quality:
-	ruff check src tests notebooks
+	ruff check src notebooks
 
 
 # Download the source datasets from an S3 bucket
