@@ -7,11 +7,11 @@ install-python-dependencies:
 
 # Run Python tests
 test:
-	pytest --cov=./src --cov-report=term-missing --ruff --ruff-format ./tests
+	pytest --cov=./src --cov-report=term-missing --ruff --ruff-format ./appendix/tests
 
 
 code-quality:
-	ruff check src tests notebooks
+	ruff check src notebooks
 
 
 # Download the source datasets from an S3 bucket
