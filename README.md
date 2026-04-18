@@ -1,6 +1,11 @@
-# MADS SIADS 699: Capstone Project - 
+# The Effects of Security Best Practices on Security Outcome Metrics in the Python Ecosystem 
 
-By [Cyril Scerbin](mailto:kshcherb@umich.edu), [Jason Harris](mailto:harjason@umich.edu), [Emily Lerner](mailto:eslerner@umich.edu)
+By [Cyril Scerbin](mailto:kshcherb@umich.edu), [Jason Harris](mailto:harjason@umich.edu), [Emily Lerner](mailto:eslerner@umich.edu) </br>
+Supervised by [Dr. Paul Resnick](mailto:presnick@umich.edu)
+
+This study was conducted in connection with MADS SIADS 699, the Capstone Project course, in partial fulfillment of the requirements for the Master of Applied Data Science degree at the University of Michigan.
+
+It builds on prior research by Nusrat Zahan, Imranur Rahman, and Laurie Williams, ["Assumptions to Evidence: Evaluating Security Practices Adoption and Their Impact on Outcomes in the npm Ecosystem."](https://arxiv.org/abs/2504.14026) While the original study focuses on the npm ecosystem, our work adapts and extends its methodology to the Python ecosystem to examine whether similar relationships between security practice adoption and security outcomes hold. By applying comparable metrics and analytical approaches in a different ecosystem, this study aims to validate, generalize, and expand upon the findings of the original research.
 
 -----
 <details>
