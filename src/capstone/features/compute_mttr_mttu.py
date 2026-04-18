@@ -33,7 +33,7 @@ def process_row(row_dict):
     pkg = row_dict['package_name']
     start = row_dict['package_published_at']
     end = row_dict['next_snapshot']
-    
+
     try:
         analyzer = DependencyAnalyzer(
             ecosystem="pypi",
@@ -59,16 +59,16 @@ def process_row(row_dict):
 def main():
     all_files = sorted(glob.glob(DATA_PATH))
     processed_files = load_checkpoint()
-    
+
     files_to_process = [f for f in all_files if f not in processed_files]
-    
+
     if not files_to_process:
         logger.info("No new files to process.")
         return
 
     for file_path in files_to_process:
         logger.info(f"Processing file: {file_path}")
-        
+
         try:
             # 1. Load and prepare snapshots
             df_deps = (
@@ -101,7 +101,7 @@ def main():
 
             processed_files.add(file_path)
             save_checkpoint(processed_files)
-            
+
         except Exception as e:
             logger.critical(f"Critical failure on file {file_path}: {e}")
             continue
