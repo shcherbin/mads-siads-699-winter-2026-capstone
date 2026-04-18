@@ -1,5 +1,10 @@
 # exclude project data files.   These are synced with S3 via just download-source-data
-notebooks/data
+notebooks/data/*
+
+# But keep these
+!notebooks/data/augmented_data/final_dataset.parquet
+!notebooks/data/augmented_data/RQ_1_dataset.parquet
+!notebooks/data/augmented_data/RQ_2_dataset.parquet
 
 # exclude mac garbage
 .DS_Store
