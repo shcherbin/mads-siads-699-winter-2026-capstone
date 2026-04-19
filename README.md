@@ -98,6 +98,273 @@ Once you can have verified that you are running in a dev container based on the 
 </details>
 
 <details>
+<summary><h1 style="display: inline;">Data Pipeline</h1></summary>
+
+NOTE: Only the final data necessary for notebooks rq1.ipynb and rq2.ipynb is included in this repo.  If access to additional raw data collected is desired, please contact harjason@umich.edu for access credentials.
+
+This section describes where the datasets in this project come from, how they
+flow through the pipeline, and which scripts and `just` recipes produce each
+artifact. It is intentionally a high-level map — it does **not** define
+individual fields or metrics.
+
+
+## Overview
+
+The project combines dependency-graph, popularity, security, and repository
+metadata for a curated set of PyPI packages. The pipeline has four stages:
+
+1. **BigQuery dataset construction** — SQL queries against public BigQuery
+   datasets produce the initial package/dependency snapshot and some control
+   variables. Results are exported as parquet to Google Cloud Storage and then
+   synced down to `notebooks/data/source_data/`.
+2. **API extraction** — Python scripts call the GitHub and Libraries.io REST
+   APIs to gather repository metadata not available in BigQuery.
+3. **Feature computation** — Python scripts transform the source data into
+   per-package feature files under `notebooks/data/augmented_data/features/`.
+4. **Final assembly** — A single merge step joins every feature file into the
+   analysis-ready datasets used by the RQ notebooks.
+
+Source parquet files are transported between team members via S3 using the
+`download-source-data` / `upload-source-data` recipes in the [justfile](justfile).
+
+## Pipeline diagram
+
+```mermaid
+flowchart LR
+    %% Sources
+    subgraph SRC["External data sources"]
+        DEPSDEV[("deps.dev<br/>(BigQuery)")]
+        PYPIBQ[("PyPI file downloads<br/>(BigQuery)")]
+        OSSFBQ[("OpenSSF Scorecard<br/>(BigQuery)")]
+        OSSFCLI[["OpenSSF Scorecard CLI"]]
+        LIO[("Libraries.io API")]
+        GH[("GitHub REST API")]
+    end
+
+    %% Source parquet files
+    subgraph SOURCE["notebooks/data/source_data/"]
+        S_INIT[/"initial_dataset/*.parquet"/]
+        S_DL[/"pypi_file_downloads/*.parquet"/]
+        S_SC[/"pypi_scorecards/*.parquet"/]
+        S_SCCLI[/"scorecards_cli/scorecard_results.jsonl"/]
+        S_LIO[/"librariesio/librariesio.parquet"/]
+    end
+
+    %% Feature scripts
+    subgraph FEATURES["Feature computation (src/capstone/features/)"]
+        F_DEP["compute_dependency_count.py"]
+        F_DL["publish_pypi_downloads.py"]
+        F_SC["publish_ossf_scorecard.py"]
+        F_SCCLI["publish_ossf_scorecard_cli.py"]
+        F_AGE["compute_repo_age_and_staleness.py"]
+        F_CONTRIB["compute_repo_contributions_and_size.py"]
+        F_LIO["publish_libaries_io_features.py"]
+        F_MTT["compute_mttr_mttu.py"]
+    end
+
+    %% Final assembly
+    FINAL["construct_final_dataset.py"]
+    OUT[/"final_dataset.parquet<br/>RQ_1_dataset.parquet<br/>RQ_2_dataset.parquet"/]
+
+    %% Edges
+    DEPSDEV --> S_INIT
+    PYPIBQ --> S_DL
+    OSSFBQ --> S_SC
+    OSSFCLI --> S_SCCLI
+    LIO --> S_LIO
+
+    S_INIT --> F_DEP
+    S_INIT --> F_MTT
+    S_DL --> F_DL
+    S_SC --> F_SC
+    S_SCCLI --> F_SCCLI
+    S_LIO --> F_LIO
+    GH --> F_AGE
+    GH --> F_CONTRIB
+
+    F_DEP --> FINAL
+    F_DL --> FINAL
+    F_SC --> FINAL
+    F_SCCLI --> FINAL
+    F_AGE --> FINAL
+    F_CONTRIB --> FINAL
+    F_MTT --> FINAL
+    FINAL --> OUT
+```
+
+## Data sources
+
+### 1. deps.dev (Google BigQuery)
+
+- **What it is:** Google's open-source dependency graph. We use the PyPI
+  ecosystem tables to identify packages, their versions, their GitHub repo
+  mappings, and their direct/transitive dependencies.
+- **BigQuery dataset:** `bigquery-public-data.deps_dev_v1.*`
+  (`PackageVersions`, `PackageVersionToProject`, `Dependencies`, `Dependents`,
+  `Projects`)
+- **Reference:** <https://deps.dev/> · <https://docs.deps.dev/bigquery/v1/>
+- **Queries:** [sql/dataset_construction/initial_dataset/](sql/dataset_construction/initial_dataset/)
+  - `1_unique_packages.sql` → `5_single_package_repos.sql` — progressive
+    filters that narrow PyPI down to packages with GitHub repos, declared
+    dependencies, dependents, and a single-package-per-repo layout.
+  - `final_dataset.sql` — exports the curated package/dependency snapshot to
+    `gs://pypi_deps/initial_dataset/*.parquet`.
+
+### 2. PyPI file downloads (Google BigQuery)
+
+- **What it is:** Download counts per PyPI package version, used as a
+  popularity control variable.
+- **BigQuery dataset:** `bigquery-public-data.pypi.file_downloads`
+- **Reference:** <https://docs.pypi.org/api/bigquery/>
+- **Query:** [sql/dataset_construction/control_variable_metrics/total_downloads.sql](sql/dataset_construction/control_variable_metrics/total_downloads.sql)
+  — exports the last 12 months of downloads to
+  `gs://pypi_deps/pypi_file_downloads/*.parquet`.
+- **Feature publisher:** [src/capstone/features/publish_pypi_downloads.py](src/capstone/features/publish_pypi_downloads.py)
+  (`just publish-feature-pypi-downloads`).
+
+### 3. OpenSSF Scorecard (Google BigQuery)
+
+- **What it is:** Automated security-practice scores for open source
+  repositories, published by the OpenSSF as a weekly cron.
+- **BigQuery dataset:** `openssf.scorecardcron.scorecard-v2`
+- **Reference:** <https://github.com/ossf/scorecard> ·
+  <https://securityscorecards.dev/>
+- **Query:** [sql/dataset_construction/open_ssf_scorecard/scorecard_metrics.sql](sql/dataset_construction/open_ssf_scorecard/scorecard_metrics.sql)
+  — joins the scorecard table against our curated repo list (uploaded to
+  BigQuery from `notebooks/data/augmented_data/unique_packages.parquet`).
+- **Feature publisher:** [src/capstone/features/publish_ossf_scorecard.py](src/capstone/features/publish_ossf_scorecard.py)
+  (`just publish-feature-ossf-scorecard`).
+
+### 4. OpenSSF Scorecard CLI (supplemental)
+
+- **What it is:** Locally generated scorecard runs for repositories not
+  covered by the OpenSSF's hosted cron. Output is appended to the BigQuery
+  scorecard data so coverage is complete.
+- **Reference:** <https://github.com/ossf/scorecard#using-the-command-line>
+- **Input:** `notebooks/data/source_data/scorecards_cli/scorecard_results.jsonl`
+  (produced by manual CLI runs outside this repo).
+- **Feature publisher:** [src/capstone/features/publish_ossf_scorecard_cli.py](src/capstone/features/publish_ossf_scorecard_cli.py)
+  (`just publish-feature-ossf-scorecard-cli`).
+
+### 5. GitHub REST API
+
+- **What it is:** Repository-level metadata used for temporal and activity
+  control variables (age, staleness, contributor count, size on disk).
+- **Access:** PyGithub client, authenticated with `GITHUB_TOKEN`.
+- **Reference:** <https://docs.github.com/en/rest>
+- **Scripts:**
+  - [src/capstone/features/compute_repo_age_and_staleness.py](src/capstone/features/compute_repo_age_and_staleness.py)
+    (`just compute-feature-repo-age-and-staleness`)
+  - [src/capstone/features/compute_repo_contributions_and_size.py](src/capstone/features/compute_repo_contributions_and_size.py)
+    (`just compute-feature-repo-contributors-and-size`)
+
+### 6. Libraries.io API
+
+- **What it is:** Aggregated package and repository metadata. Currently
+  extracted for exploratory use; the Libraries.io feature join is disabled in
+  final assembly in favor of direct GitHub API data.
+- **Access:** HTTP calls to `https://libraries.io/api/github/{owner}/{repo}`,
+  authenticated with `LIBRARIESIO_API_KEY`, rate-limited to 1 req/sec.
+- **Reference:** <https://libraries.io/api>
+- **Extractor:** [src/capstone/extraction/extract_librariesio_api.py](src/capstone/extraction/extract_librariesio_api.py)
+- **Feature publisher:** [src/capstone/features/publish_libaries_io_features.py](src/capstone/features/publish_libaries_io_features.py)
+  (`just publish-feature-libraries-io`)
+
+### 7. Derived: MTTU / MTTR
+
+- **What it is:** Mean-time-to-update and mean-time-to-remediate metrics
+  derived from the deps.dev snapshot and PyPI release timelines. This is not
+  a separate upstream source — it is a derived feature computed from the
+  `initial_dataset` parquet files using the `dependency_metrics` helper
+  library.
+- **Script:** [src/capstone/features/compute_mttr_mttu.py](src/capstone/features/compute_mttr_mttu.py)
+  (no `just` recipe; run directly — this is a long-running job with
+  checkpointing).
+- **Based on:** https://github.com/imranur-rahman/dependency-update-metrics
+
+## Pipeline stages
+
+### Stage 1 — BigQuery construction
+
+Run the SQL files in [sql/dataset_construction/](sql/dataset_construction/)
+directly in the BigQuery console. The `final_dataset.sql` and
+`total_downloads.sql` queries write parquet files to
+`gs://pypi_deps/...`; download them into `notebooks/data/source_data/` (either
+manually from GCS or via the team S3 mirror — see stage 0 below).
+
+### Stage 0 — Source data transport
+
+- `just download-source-data` — syncs `notebooks/data/` down from the team's
+  S3 bucket (`AWS_S3_BUCKET` env var).
+- `just upload-source-data` — uploads local `notebooks/data/` back to S3
+  after a dry-run confirmation.
+
+### Stage 2 — API extraction
+
+Run before feature computation so downstream scripts can read the resulting
+parquet files:
+
+```
+python ./src/capstone/extraction/extract_repo_list.py
+python ./src/capstone/extraction/extract_librariesio_api.py
+```
+
+### Stage 3 — Feature computation
+
+Each recipe writes a feature parquet under
+`notebooks/data/augmented_data/features/`:
+
+```
+just compute-feature-dependency-count
+just compute-feature-repo-age-and-staleness
+just compute-feature-repo-contributors-and-size
+just publish-feature-pypi-downloads
+just publish-feature-ossf-scorecard
+just publish-feature-ossf-scorecard-cli
+just publish-feature-libraries-io
+python ./src/capstone/features/compute_mttr_mttu.py
+```
+
+### Stage 4 — Final assembly
+
+```
+just construct-final-dataset
+```
+
+This produces the analysis-ready files consumed by the RQ notebooks:
+
+- `notebooks/data/augmented_data/final_dataset.parquet`
+- `notebooks/data/augmented_data/RQ_1_dataset.parquet`
+- `notebooks/data/augmented_data/RQ_2_dataset.parquet`
+
+## Reproducing the pipeline end-to-end
+
+For a fresh environment with access to the team S3 bucket:
+
+```
+just install-python-dependencies
+just download-source-data
+
+# (Re-run BigQuery SQL only if source data needs refresh, then re-download.)
+
+python ./src/capstone/extraction/extract_repo_list.py
+python ./src/capstone/extraction/extract_librariesio_api.py
+
+just compute-feature-dependency-count
+just compute-feature-repo-age-and-staleness
+just compute-feature-repo-contributors-and-size
+just publish-feature-pypi-downloads
+just publish-feature-ossf-scorecard
+just publish-feature-ossf-scorecard-cli
+just publish-feature-libraries-io
+python ./src/capstone/features/compute_mttr_mttu.py
+
+just construct-final-dataset
+```
+
+</details>
+
+<details>
 
 <summary><h1 style="display: inline;">Common Issues (Check this if your code will not run)</h1></summary>
 
